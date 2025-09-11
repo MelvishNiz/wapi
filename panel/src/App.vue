@@ -97,7 +97,7 @@
         <div class="glass-card rounded-xl p-4">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-gray-300">Access Token</span>
-            <a href="https://git.bintangtechnology.com/microservices/whatsapp-gateway#api-reference" target="_blank" class="text-xs text-blue-400 hover:text-blue-300">
+            <a :href="`${API_URL}/openapi`" target="_blank" class="text-xs text-blue-400 hover:text-blue-300">
               API Docs <i class="icon-[material-symbols--open-in-new] ml-1"></i>
             </a>
           </div>

@@ -33,9 +33,7 @@ export const ApiController = new Elysia({ prefix: "/api" })
       };
     },
     {
-      headers: t.Object({
-        access_token: t.String(),
-      }),
+      detail: { description: "Get status WhatsApp Client", security: [{ ACCESS_TOKEN: [] }] },
       response: {
         200: t.Object({
           state: t.String(),
@@ -64,9 +62,7 @@ export const ApiController = new Elysia({ prefix: "/api" })
       };
     },
     {
-      headers: t.Object({
-        access_token: t.String(),
-      }),
+      detail: { description: "Send text message", security: [{ ACCESS_TOKEN: [] }] },
       body: t.Object({
         to: t.String(),
         message: t.String(),
@@ -83,15 +79,18 @@ export const ApiController = new Elysia({ prefix: "/api" })
     () => {
       setTimeout(() => {
         process.exit();
-      }, 300);
+      }, 1000);
       return {
         message: "Restart Success",
       };
     },
     {
-      response: t.Object({
-        message: t.String(),
-      }),
+      detail: { description: "Restart WhatsApp Client", security: [{ ACCESS_TOKEN: [] }] },
+      response: {
+        200: t.Object({
+          message: t.String(),
+        }),
+      },
     },
   )
   // Logout
@@ -105,9 +104,7 @@ export const ApiController = new Elysia({ prefix: "/api" })
       };
     },
     {
-      headers: t.Object({
-        access_token: t.String(),
-      }),
+      detail: { description: "Logout WhatsApp Client", security: [{ ACCESS_TOKEN: [] }] },
       response: {
         200: t.Object({
           message: t.String(),

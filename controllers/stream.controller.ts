@@ -42,6 +42,7 @@ export const StreamController = new Elysia()
       }
     },
     {
+      detail: { description: "Stream status with eventsource", security: [] },
       query: t.Object({
         token: t.String(),
       }),
