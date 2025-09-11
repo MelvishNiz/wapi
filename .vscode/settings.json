@@ -1,0 +1,17 @@
+{
+  "editor.rulers": [
+    {
+      "column": 200,
+      "color": "#ffffff"
+    }
+  ],
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit"
+  },
+  "editor.defaultFormatter": "biomejs.biome",
+  "todo-tree.tree.disableCompactFolders": true,
+  "explorer.compactFolders": false
+}
