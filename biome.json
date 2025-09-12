@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["*.ts", "./lib/*.ts", "./utils/*.ts", "./plugins/*.ts", "./controllers/*.ts", "./panel/src/*.vue", "./panel/src/components/*.vue"],
+    "includes": ["*.ts", "./db/*.ts", "./lib/*.ts", "./utils/*.ts", "./plugins/*.ts", "./controllers/*.ts", "./panel/src/*.vue", "./panel/src/components/*.vue"],
     "ignoreUnknown": true
   },
   "formatter": {

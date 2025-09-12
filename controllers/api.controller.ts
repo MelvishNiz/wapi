@@ -1,5 +1,10 @@
+import { eq } from "drizzle-orm";
 import Elysia, { status, t } from "elysia";
+import { db } from "../db";
+import { phoneNumbers } from "../db/schema";
 import { data, sock } from "../lib/baileys";
+import { GoogleContact } from "../lib/google-contact";
+import { logger } from "../lib/logger";
 import { AccessTokenPlugin } from "../plugins/access-token";
 import { Helper } from "../utils/helper";
 
@@ -10,6 +15,7 @@ const getState = () => {
   else if (user) state = "READY";
   return state as "READY" | "NOT_READY" | "AUTH_REQUIRED";
 };
+const googleContact = new GoogleContact();
 
 export const ApiController = new Elysia({ prefix: "/api" })
   // Access Token Plugins
@@ -55,6 +61,31 @@ export const ApiController = new Elysia({ prefix: "/api" })
     async ({ body }) => {
       const state = getState();
       if (state !== "READY") throw status(500, "Not ready");
+      const { isValid, international } = Helper.validatePhoneNumber(body.to);
+      if (!isValid || !international) throw status(422, `Invalid phone number format ${body.to}`);
+      try {
+        const name = `(wapi) ${international}`;
+        const [alreadyExists] = await db.select().from(phoneNumbers).where(eq(phoneNumbers.name, name)).limit(1);
+        if (!alreadyExists) {
+          const contact = await googleContact.search(name);
+          if (!contact.results?.length || contact.results.length <= 0) {
+            logger.info(`Adding ${international} to google contact`);
+            await googleContact.create({
+              phoneNumber: international,
+              name: name,
+            });
+            await db.insert(phoneNumbers).values({ name });
+          } else {
+            logger.info(`${international} already exists in google contact, skip added`);
+          }
+        } else {
+          logger.info(`${international} already exists in local db, skip added`);
+        }
+      } catch (err: any) {
+        console.log(err);
+        logger.error(err.message);
+      }
+
       await sock.sendMessage(Helper.toJid(body.to), { text: body.message });
 
       return {
