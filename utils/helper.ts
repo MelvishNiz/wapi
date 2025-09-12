@@ -1,4 +1,4 @@
-import { AsYouType } from "libphonenumber-js/max";
+import { parsePhoneNumber } from "libphonenumber-js/max";
 
 export const Helper = {
   toJid: (phone: string) => {
@@ -11,9 +11,8 @@ export const Helper = {
   },
 
   validatePhoneNumber: (phoneNumber: string) => {
-    const asYouType = new AsYouType();
-    asYouType.input(`+${phoneNumber}`);
-    const number = asYouType.getNumber();
+    const number = parsePhoneNumber(`+${phoneNumber}`);
+
     const isValid = number?.isValid();
     const type = number?.getType();
 
