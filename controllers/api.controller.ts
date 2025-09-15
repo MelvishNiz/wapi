@@ -63,6 +63,7 @@ export const ApiController = new Elysia({ prefix: "/api" })
       if (state !== "READY") throw status(500, "Not ready");
       const { isValid, international } = Helper.validatePhoneNumber(body.to);
       if (!isValid || !international) throw status(422, `Invalid phone number format ${body.to}`);
+
       try {
         const name = `(wapi) ${international}`;
         const [alreadyExists] = await db.select().from(phoneNumbers).where(eq(phoneNumbers.name, name)).limit(1);
@@ -82,11 +83,21 @@ export const ApiController = new Elysia({ prefix: "/api" })
           logger.info(`${international} already exists in local db, skip added`);
         }
       } catch (err: any) {
-        console.log(err);
         logger.error(err.message);
       }
 
-      await sock.sendMessage(Helper.toJid(body.to), { text: body.message });
+      if (body.message) {
+        await sock.sendMessage(Helper.toJid(body.to), {
+          text: body.message,
+        });
+      }
+      if (body.document) {
+        await sock.sendMessage(Helper.toJid(body.to), {
+          document: Buffer.from(await body.document.arrayBuffer()),
+          mimetype: body.document.type || "application/octet-stream",
+          fileName: body.document.name || "file",
+        });
+      }
 
       return {
         message: `Message sent to ${body.to}`,
@@ -94,10 +105,18 @@ export const ApiController = new Elysia({ prefix: "/api" })
     },
     {
       detail: { description: "Send text message", security: [{ ACCESS_TOKEN: [] }] },
-      body: t.Object({
-        to: t.String(),
-        message: t.String(),
-      }),
+      body: t.Union([
+        t.Object({
+          to: t.String(),
+          message: t.String(),
+          document: t.Optional(t.File()),
+        }),
+        t.Object({
+          to: t.String(),
+          message: t.Optional(t.String()),
+          document: t.File(),
+        }),
+      ]),
       response: {
         200: t.Object({
           message: t.String(),
