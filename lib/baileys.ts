@@ -46,6 +46,7 @@ function getSenderJids(message: WAMessage) {
 }
 
 function isWhitelistedAdmin(message: WAMessage) {
+  if (message.key.fromMe) return true;
   if (adminWhitelist.size === 0) return false;
   return getSenderJids(message).some((jid) => adminWhitelist.has(jid));
 }
@@ -106,7 +107,7 @@ const start = async () => {
 
     for (const message of messages) {
       const groupJid = message.key.remoteJid;
-      if (!groupJid?.endsWith("@g.us") || message.key.fromMe) continue;
+      if (!groupJid?.endsWith("@g.us")) continue;
       if (getMessageText(message).toLowerCase() !== "/info") continue;
       if (!isWhitelistedAdmin(message)) continue;
 
