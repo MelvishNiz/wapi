@@ -124,6 +124,55 @@ export const ApiController = new Elysia({ prefix: "/api" })
       },
     },
   )
+  // Send Group Message
+  .post(
+    "/send-group-message",
+    async ({ body }) => {
+      const state = getState();
+      if (state !== "READY") throw status(500, "Not ready");
+      if (!Helper.validateGroupJid(body.group_id)) throw status(422, `Invalid group id format ${body.group_id}`);
+
+      const groupJid = Helper.toGroupJid(body.group_id);
+
+      if (body.message) {
+        await sock.sendMessage(groupJid, {
+          text: body.message,
+        });
+      }
+      if (body.document) {
+        await sock.sendMessage(groupJid, {
+          document: Buffer.from(await body.document.arrayBuffer()),
+          mimetype: body.document.type || "application/octet-stream",
+          fileName: body.document.name || "file",
+        });
+      }
+
+      return {
+        message: `Message sent to group ${groupJid}`,
+      };
+    },
+    {
+      detail: { description: "Send text message to WhatsApp group", security: [{ ACCESS_TOKEN: [] }] },
+      body: t.Union([
+        t.Object({
+          group_id: t.String(),
+          message: t.String(),
+          document: t.Optional(t.File()),
+        }),
+        t.Object({
+          group_id: t.String(),
+          message: t.Optional(t.String()),
+          document: t.File(),
+        }),
+      ]),
+      response: {
+        200: t.Object({
+          message: t.String(),
+        }),
+      },
+    },
+  )
+  // Restart
   .post(
     "/restart",
     () => {
