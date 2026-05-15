@@ -16,7 +16,9 @@ import { logger } from "./logger";
 
 const savePath = "./credentials/auth_save";
 const msgRetryCounterCache = new NodeCache() as CacheStore;
+const processedCommandCache = new NodeCache({ stdTTL: 300 }) as CacheStore;
 const { state, saveCreds } = await useMultiFileAuthState(savePath);
+const startedAt = Math.floor(Date.now() / 1000);
 const adminWhitelist = new Set(
   (process.env.ADMIN_WHITELIST || process.env.WHITELIST_ADMINS || process.env.WHATSAPP_ADMIN_WHITELIST || "")
     .split(",")
@@ -49,6 +51,27 @@ function isWhitelistedAdmin(message: WAMessage) {
   if (message.key.fromMe) return true;
   if (adminWhitelist.size === 0) return false;
   return getSenderJids(message).some((jid) => adminWhitelist.has(jid));
+}
+
+function getMessageTimestamp(message: WAMessage) {
+  const timestamp = message.messageTimestamp;
+  if (!timestamp) return 0;
+  if (typeof timestamp === "number") return timestamp;
+  return Number(timestamp);
+}
+
+function isNewMessage(message: WAMessage) {
+  const timestamp = getMessageTimestamp(message);
+  return !timestamp || timestamp >= startedAt - 30;
+}
+
+function hasProcessedCommand(message: WAMessage) {
+  const cacheKey = `${message.key.remoteJid || ""}:${message.key.id || ""}`;
+  if (!message.key.id) return false;
+  if (processedCommandCache.get(cacheKey)) return true;
+
+  processedCommandCache.set(cacheKey, true);
+  return false;
 }
 
 function formatDate(timestamp?: number) {
@@ -103,12 +126,13 @@ const start = async () => {
   });
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
-    if (type !== "notify") return;
-
     for (const message of messages) {
       const groupJid = message.key.remoteJid;
       if (!groupJid?.endsWith("@g.us")) continue;
+      if (type !== "notify" && !message.key.fromMe) continue;
+      if (!isNewMessage(message)) continue;
       if (getMessageText(message).toLowerCase() !== "/info") continue;
+      if (hasProcessedCommand(message)) continue;
       if (!isWhitelistedAdmin(message)) continue;
 
       try {
