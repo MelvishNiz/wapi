@@ -34,6 +34,42 @@ Run:
 bun run start
 ```
 
+## Docker
+
+Local build dari source:
+
+```bash
+cp .env.example .env
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+```
+
+Production pakai image dari GitHub Container Registry:
+
+```bash
+cp .env.example .env
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+Default image production:
+
+```txt
+ghcr.io/melvishniz/wapi:latest
+```
+
+Jika ingin pakai tag tertentu:
+
+```bash
+WAPI_IMAGE=ghcr.io/melvishniz/wapi:1.2.3 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+Data runtime disimpan di folder lokal:
+
+```txt
+credentials/
+db/
+logs/
+```
+
 ## Environment
 
 ```env
@@ -41,7 +77,22 @@ ACCESS_TOKEN=change-me
 BASIC_AUTH_USER=admin
 BASIC_AUTH_PASS=change-me
 VITE_API_URL=http://localhost:3000
-VITE_ACCESS_TOKEN=change-me
+VITE_ACCESS_TOKEN=change-me # samakan dengan ACCESS_TOKEN jika panel perlu akses API
+```
+
+## Release & Docker Image
+
+Release otomatis berjalan saat push ke `main` memakai semantic-release. Gunakan Conventional Commits, contoh:
+
+```txt
+feat: add command webhook params
+fix: handle empty webhook response
+```
+
+Docker image otomatis dibuat oleh GitHub Actions untuk branch, PR, dan tag release ke:
+
+```txt
+ghcr.io/<owner>/<repo>
 ```
 
 ## API Documentation

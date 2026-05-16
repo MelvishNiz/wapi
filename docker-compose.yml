@@ -1,0 +1,14 @@
+services:
+  wapi:
+    container_name: wapi
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      TZ: ${TZ:-Asia/Jakarta}
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ./credentials:/app/credentials
+      - ./db:/app/db
+      - ./logs:/app/logs

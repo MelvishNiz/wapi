@@ -1,0 +1,4 @@
+services:
+  wapi:
+    image: ${WAPI_IMAGE:-ghcr.io/melvishniz/wapi:latest}
+    pull_policy: always

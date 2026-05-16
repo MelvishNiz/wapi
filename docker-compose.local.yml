@@ -1,0 +1,8 @@
+services:
+  wapi:
+    build:
+      context: .
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        VITE_PANEL_ACCESS: ${VITE_ACCESS_TOKEN:-}
+    image: wapi:local
