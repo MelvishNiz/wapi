@@ -1,20 +1,18 @@
 <template>
-  <div class="glass-card rounded-2xl p-6">
-    <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center space-x-3">
-        <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-          <i class="icon-[material-symbols--qr-code] text-white"></i>
-        </div>
-        <h2 class="text-lg font-semibold">Connection</h2>
+  <div class="space-y-4">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-sm font-medium text-white">QR Code</p>
+        <p class="text-xs text-gray-400">Scan from WhatsApp linked devices.</p>
       </div>
-      <div class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm">
+      <div class="w-fit px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm">
         Scan with WhatsApp
       </div>
     </div>
 
     <div class="flex flex-col items-center gap-6">
       <div class="qr-container">
-        <div class="qr-inner aspect-square w-96 shrink-0">
+        <div class="qr-inner aspect-square w-[min(22rem,calc(100vw-5rem))] shrink-0">
           <img v-if="qrcodeDataUrl" class="flex items-center justify-center size-full" :src="qrcodeDataUrl">
           <span v-else class="flex items-center justify-center size-full">
             <div class="relative size-full flex items-center justify-center">
@@ -41,6 +39,11 @@ const props = defineProps({ data: { type: String, default: "" } });
 const qrcodeDataUrl = ref("");
 
 const generateQrCode = () => {
+  if (!props.data) {
+    qrcodeDataUrl.value = "";
+    return;
+  }
+
   QRCode.toDataURL(props.data, (_, url) => {
     qrcodeDataUrl.value = url || ``;
   });

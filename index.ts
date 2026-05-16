@@ -1,12 +1,18 @@
 import "dotenv/config";
 import cors from "@elysiajs/cors";
 import { Elysia } from "elysia";
-import { ApiController } from "./controllers/api.controller";
-import { PanelController } from "./controllers/panel.controller";
-import { StreamController } from "./controllers/stream.controller";
+import Long from "long";
 import { logger } from "./lib/logger";
 import { LoggerPlugin } from "./plugins/logger";
 import { OpenApiPlugin } from "./plugins/openapi";
+
+(globalThis as typeof globalThis & { Long: typeof Long }).Long = Long;
+
+const [{ ApiController }, { PanelController }, { StreamController }] = await Promise.all([
+  import("./controllers/api.controller"),
+  import("./controllers/panel.controller"),
+  import("./controllers/stream.controller"),
+]);
 
 const app = new Elysia()
   // Plugins

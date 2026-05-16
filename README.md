@@ -45,12 +45,7 @@ WAPI is a REST API for sending and receiving WhatsApp messages built on [Bun](ht
 | `bun run build` | Build a standalone server binary |
 | `bun run build:panel` | Build the Vue panel |
 | `bun run build:all` | Build server and panel |
-| `bun run login` | Google authentication flow |
 | `bun run start` | Run the compiled server |
-| `bun run db:generate` | Generate Drizzle migrations |
-| `bun run db:migrate` | Apply pending migrations |
-| `bun run db:studio` | Start Drizzle studio |
-| `bun run db:push` | Push schema to database |
 
 ## Notes
 

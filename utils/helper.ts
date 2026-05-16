@@ -18,7 +18,15 @@ export const Helper = {
   },
 
   validatePhoneNumber: (phoneNumber: string) => {
-    const number = parsePhoneNumber(`+${phoneNumber}`);
+    const normalizedPhoneNumber = phoneNumber.trim().replace(/[^\d+]/g, "");
+    const numberInput = normalizedPhoneNumber.startsWith("+") ? normalizedPhoneNumber : `+${normalizedPhoneNumber}`;
+    const number = (() => {
+      try {
+        return parsePhoneNumber(numberInput);
+      } catch {
+        return undefined;
+      }
+    })();
 
     const isValid = number?.isValid();
     const type = number?.getType();

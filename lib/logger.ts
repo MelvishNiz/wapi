@@ -1,19 +1,8 @@
 import P from "pino";
 
-export const logger = P({
-  level: "info",
-  transport: {
-    targets: [
-      {
-        target: "pino-pretty", // pretty-print for console
-        options: { colorize: true },
-        level: "trace",
-      },
-      {
-        target: "pino/file", // raw file output
-        options: { destination: "./logs/wa-logs.txt" },
-        level: "trace",
-      },
-    ],
-  },
-});
+const streams = [
+  { level: "trace", stream: process.stdout },
+  { level: "trace", stream: P.destination("./logs/wa-logs.txt") },
+];
+
+export const logger = P({ level: "info" }, P.multistream(streams));

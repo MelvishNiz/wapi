@@ -8,10 +8,15 @@ if (!ACCESS_TOKEN) throw new Error("ACCESS_TOKEN is required");
 const getState = () => {
   const user = sock.user || null;
   let state = "NOT_READY";
-  if (!user && data.qr) state = "AUTH_REQUIRED";
+  if (!user && (data.qr || data.pairingCode)) state = "AUTH_REQUIRED";
   else if (user) state = "READY";
   return state as "READY" | "NOT_READY" | "AUTH_REQUIRED";
 };
+const getPairingStatus = () => ({
+  code: data.pairingCode || "",
+  phone_number: data.pairingPhoneNumber || "",
+  requested_at: data.pairingRequestedAt || null,
+});
 
 export const StreamController = new Elysia()
   // Stream Status
@@ -36,6 +41,7 @@ export const StreamController = new Elysia()
             },
             connection: data.connection || null,
             qr_code: data.qr || "",
+            pairing: getPairingStatus(),
           },
         });
         await new Promise((r) => setTimeout(r, 1000));

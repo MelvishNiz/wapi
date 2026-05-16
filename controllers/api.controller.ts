@@ -1,21 +1,20 @@
-import { eq } from "drizzle-orm";
 import Elysia, { status, t } from "elysia";
-import { db } from "../db";
-import { phoneNumbers } from "../db/schema";
-import { data, sock } from "../lib/baileys";
-import { GoogleContact } from "../lib/google-contact";
-import { logger } from "../lib/logger";
+import { data, requestWhatsAppPairingCode, sock } from "../lib/baileys";
 import { AccessTokenPlugin } from "../plugins/access-token";
 import { Helper } from "../utils/helper";
 
 const getState = () => {
   const user = sock.user || null;
   let state = "NOT_READY";
-  if (!user && data.qr) state = "AUTH_REQUIRED";
+  if (!user && (data.qr || data.pairingCode)) state = "AUTH_REQUIRED";
   else if (user) state = "READY";
   return state as "READY" | "NOT_READY" | "AUTH_REQUIRED";
 };
-const googleContact = new GoogleContact();
+const getPairingStatus = () => ({
+  code: data.pairingCode || "",
+  phone_number: data.pairingPhoneNumber || "",
+  requested_at: data.pairingRequestedAt || null,
+});
 
 export const ApiController = new Elysia({ prefix: "/api" })
   // Access Token Plugins
@@ -36,6 +35,7 @@ export const ApiController = new Elysia({ prefix: "/api" })
         },
         connection: data.connection || null,
         qr_code: data.qr || "",
+        pairing: getPairingStatus(),
       };
     },
     {
@@ -51,6 +51,44 @@ export const ApiController = new Elysia({ prefix: "/api" })
             }),
           ),
           qr_code: t.Nullable(t.String()),
+          pairing: t.Object({
+            code: t.String(),
+            phone_number: t.String(),
+            requested_at: t.Nullable(t.Number()),
+          }),
+        }),
+      },
+    },
+  )
+  // Request Pairing Code
+  .post(
+    "/pairing-code",
+    async ({ body }) => {
+      const state = getState();
+      if (state === "READY") throw status(409, "WhatsApp session is already connected");
+
+      const phoneNumber = body.phone_number.replace(/\D/g, "");
+      const { isValid } = Helper.validatePhoneNumber(phoneNumber);
+      if (!isValid) throw status(422, `Invalid phone number format ${body.phone_number}`);
+
+      const pairing = await requestWhatsAppPairingCode(phoneNumber);
+
+      return {
+        message: "Pairing code generated",
+        pairing_code: pairing.pairingCode,
+        phone_number: pairing.phoneNumber,
+      };
+    },
+    {
+      detail: { description: "Request WhatsApp pairing code by phone number", security: [{ ACCESS_TOKEN: [] }] },
+      body: t.Object({
+        phone_number: t.String({ minLength: 8 }),
+      }),
+      response: {
+        200: t.Object({
+          message: t.String(),
+          pairing_code: t.String(),
+          phone_number: t.String(),
         }),
       },
     },
@@ -63,28 +101,6 @@ export const ApiController = new Elysia({ prefix: "/api" })
       if (state !== "READY") throw status(500, "Not ready");
       const { isValid, international } = Helper.validatePhoneNumber(body.to);
       if (!isValid || !international) throw status(422, `Invalid phone number format ${body.to}`);
-
-      try {
-        const name = `(wapi) ${international}`;
-        const [alreadyExists] = await db.select().from(phoneNumbers).where(eq(phoneNumbers.name, name)).limit(1);
-        if (!alreadyExists) {
-          const contact = await googleContact.search(name);
-          if (!contact.results?.length || contact.results.length <= 0) {
-            logger.info(`Adding ${international} to google contact`);
-            await googleContact.create({
-              phoneNumber: international,
-              name: name,
-            });
-            await db.insert(phoneNumbers).values({ name });
-          } else {
-            logger.info(`${international} already exists in google contact, skip added`);
-          }
-        } else {
-          logger.info(`${international} already exists in local db, skip added`);
-        }
-      } catch (err: any) {
-        logger.error(err.message);
-      }
 
       if (body.message) {
         await sock.sendMessage(Helper.toJid(body.to), {

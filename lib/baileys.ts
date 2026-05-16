@@ -84,9 +84,12 @@ function formatDate(timestamp?: number) {
 }
 
 const start = async () => {
-  const data: { connection: WAConnectionState | undefined; qr: string | undefined } = {
+  const data: { connection: WAConnectionState | undefined; qr: string | undefined; pairingCode: string | undefined; pairingPhoneNumber: string | undefined; pairingRequestedAt: number | undefined } = {
     connection: undefined,
     qr: undefined,
+    pairingCode: undefined,
+    pairingPhoneNumber: undefined,
+    pairingRequestedAt: undefined,
   };
   const { version, isLatest } = await fetchLatestBaileysVersion();
   logger.info(`using WA v${version.join(".")}, isLatest: ${isLatest}`);
@@ -108,6 +111,9 @@ const start = async () => {
     logger.info(`Connection Status: ${connection}`);
 
     if (connection === "close") {
+      data.pairingCode = undefined;
+      data.pairingPhoneNumber = undefined;
+      data.pairingRequestedAt = undefined;
       // reconnect if not logged out
       if ((lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut) {
         process.exit();
@@ -116,6 +122,11 @@ const start = async () => {
         await rm(savePath, { recursive: true, force: true });
         process.exit();
       }
+    } else if (connection === "open") {
+      data.qr = undefined;
+      data.pairingCode = undefined;
+      data.pairingPhoneNumber = undefined;
+      data.pairingRequestedAt = undefined;
     } else if (!connection && qr) {
       logger.info(`Auth Required scan qrcode`);
     }
@@ -167,3 +178,22 @@ const start = async () => {
 };
 
 export const { sock, data } = await start();
+
+export const requestWhatsAppPairingCode = async (phoneNumber: string) => {
+  if (sock.authState.creds.registered || sock.user) {
+    throw new Error("WhatsApp session is already connected");
+  }
+
+  const normalizedPhoneNumber = phoneNumber.replace(/\D/g, "");
+  if (!normalizedPhoneNumber) throw new Error("Phone number is required");
+
+  const pairingCode = await sock.requestPairingCode(normalizedPhoneNumber);
+  data.pairingCode = pairingCode;
+  data.pairingPhoneNumber = normalizedPhoneNumber;
+  data.pairingRequestedAt = Date.now();
+
+  return {
+    pairingCode,
+    phoneNumber: normalizedPhoneNumber,
+  };
+};
