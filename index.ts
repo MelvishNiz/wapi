@@ -8,11 +8,7 @@ import { OpenApiPlugin } from "./plugins/openapi";
 
 (globalThis as typeof globalThis & { Long: typeof Long }).Long = Long;
 
-const [{ ApiController }, { PanelController }, { StreamController }] = await Promise.all([
-  import("./controllers/api.controller"),
-  import("./controllers/panel.controller"),
-  import("./controllers/stream.controller"),
-]);
+const [{ ApiController }, { PanelController }] = await Promise.all([import("./controllers/api.controller"), import("./controllers/panel.controller")]);
 
 const app = new Elysia()
   // Plugins
@@ -21,7 +17,6 @@ const app = new Elysia()
   .use(OpenApiPlugin())
   // Controllers
   .use(ApiController)
-  .use(StreamController)
   .use(PanelController)
   // Listen Port
   .listen(3000);

@@ -118,7 +118,7 @@ const parseAdminWhitelistInput = () => {
 const loadCommands = async () => {
   isLoadingCommands.value = true;
   try {
-    const response = await axios.get(`${PANEL_API_URL}/panel-api/group-bot/commands`);
+    const response = await axios.get(`${PANEL_API_URL}/panel/api/group-bot/commands`);
     commands.value = response.data.commands || [];
   } catch (error: any) {
     const message = getErrorMessage(error, "Failed to load group bot commands");
@@ -130,7 +130,7 @@ const loadCommands = async () => {
 };
 const loadBotSettings = async () => {
   try {
-    const response = await axios.get(`${PANEL_API_URL}/panel-api/group-bot/settings`);
+    const response = await axios.get(`${PANEL_API_URL}/panel/api/group-bot/settings`);
     adminWhitelistInput.value = (response.data.settings?.adminWhitelist || []).join("\n");
   } catch (error: any) {
     const message = getErrorMessage(error, "Failed to load group bot settings");
@@ -145,7 +145,7 @@ const saveBotSettings = async () => {
   isSavingSettings.value = true;
   try {
     const response = await axios.put(
-      `${PANEL_API_URL}/panel-api/group-bot/settings`,
+      `${PANEL_API_URL}/panel/api/group-bot/settings`,
       { adminWhitelist: parseAdminWhitelistInput() },
     );
 
@@ -174,7 +174,7 @@ const closeCommandModal = () => {
 const saveCommand = async (payload: GroupBotCommandPayload) => {
   isSavingCommand.value = true;
   try {
-    const url = editingCommandId.value ? `${PANEL_API_URL}/panel-api/group-bot/commands/${editingCommandId.value}` : `${PANEL_API_URL}/panel-api/group-bot/commands`;
+    const url = editingCommandId.value ? `${PANEL_API_URL}/panel/api/group-bot/commands/${editingCommandId.value}` : `${PANEL_API_URL}/panel/api/group-bot/commands`;
     const response = editingCommandId.value ? await axios.put(url, payload) : await axios.post(url, payload);
 
     props.addLog(response.data.message, "success");
@@ -196,7 +196,7 @@ const deleteCommand = async (id: string) => {
 
   isLoadingCommands.value = true;
   try {
-    const response = await axios.delete(`${PANEL_API_URL}/panel-api/group-bot/commands/${id}`);
+    const response = await axios.delete(`${PANEL_API_URL}/panel/api/group-bot/commands/${id}`);
     props.addLog(response.data.message, "success");
     props.showToast(response.data.message, "success");
     if (editingCommandId.value === id) closeCommandModal();

@@ -3,6 +3,24 @@ import Elysia from "elysia";
 import pkg from "../package.json";
 import { BasicAuthPlugin } from "./basic-auth";
 
+const excludedPaths = [
+  "/",
+  "/*",
+  "/panel",
+  "/panel/api/status",
+  "/panel/sse",
+  "/panel/api/pairing-code",
+  "/panel/api/restart",
+  "/panel/api/logout",
+  "/panel/api/send-message",
+  "/panel/api/group-bot/commands",
+  "/panel/api/group-bot/commands/:id",
+  "/panel/api/group-bot/settings",
+  "/bot-commands",
+  "/runtime-config.js",
+  "/assets/*",
+];
+
 export const OpenApiPlugin = () =>
   new Elysia()
     // Basic Auth
@@ -11,7 +29,7 @@ export const OpenApiPlugin = () =>
     .use(
       openapi({
         exclude: {
-          paths: ["/", "/*", "/panel", "/panel/*", "/bot-commands", "/assets/*"],
+          paths: excludedPaths,
         },
         documentation: {
           info: {

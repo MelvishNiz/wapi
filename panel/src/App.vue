@@ -304,7 +304,7 @@ const copyPairingCode = () => {
 };
 const formatPairingCode = (code: string) => code.replace(/(.{4})/g, "$1 ").trim();
 
-const es = new EventSource(`${PANEL_API_URL}/panel-sse`);
+const es = new EventSource(`${PANEL_API_URL}/panel/sse`);
 const startStream = () => {
   addLog("Connecting to panel stream", "info");
   es.onopen = () => {
@@ -328,7 +328,7 @@ const requestPairingCode = async () => {
   addLog(`Requesting pairing code for ${pairingPhoneNumber.value}...`, "info");
   isLoadingPairing.value = true;
   try {
-    const response = await axios.post(`${PANEL_API_URL}/panel-api/pairing-code`, { phone_number: pairingPhoneNumber.value });
+    const response = await axios.post(`${PANEL_API_URL}/panel/api/pairing-code`, { phone_number: pairingPhoneNumber.value });
     data.pairing.code = response.data.pairing_code;
     data.pairing.phone_number = response.data.phone_number;
     data.pairing.requested_at = Date.now();
@@ -346,7 +346,7 @@ const restartSession = async () => {
   addLog("Initiating session restart...", "info");
   isLoadingAction.value = true;
   try {
-    const response = await axios.post(`${PANEL_API_URL}/panel-api/restart`, {});
+    const response = await axios.post(`${PANEL_API_URL}/panel/api/restart`, {});
     addLog(response.data.message, "success");
   } catch (error: any) {
     const message = error.response?.data?.message || "Restart failed";
@@ -359,7 +359,7 @@ const logout = async () => {
   addLog("Logging out...", "info");
   isLoadingAction.value = true;
   try {
-    const response = await axios.post(`${PANEL_API_URL}/panel-api/logout`, {});
+    const response = await axios.post(`${PANEL_API_URL}/panel/api/logout`, {});
     addLog(response.data.message, "success");
   } catch (error: any) {
     const message = error.response?.data?.message || "Logout failed";
@@ -377,7 +377,7 @@ const testSendMessage = async () => {
   addLog(`Sending test message to ${currentPhoneNumber}...`, "info");
   isLoadingAction.value = true;
   try {
-    const response = await axios.post(`${PANEL_API_URL}/panel-api/send-message`, { to: currentPhoneNumber, message: "Test Message from WhatsApp Gateway" });
+    const response = await axios.post(`${PANEL_API_URL}/panel/api/send-message`, { to: currentPhoneNumber, message: "Test Message from WhatsApp Gateway" });
     addLog(response.data.message, "success");
   } catch (error: any) {
     const message = error.response?.data?.message || "Failed to send message";

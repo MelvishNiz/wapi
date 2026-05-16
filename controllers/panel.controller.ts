@@ -37,15 +37,15 @@ export const PanelController = new Elysia()
   // Basic Auth
   .use(BasicAuthPlugin())
   // Panel API, protected by Basic Auth. ACCESS_TOKEN stays server-side.
-  .get("/panel-api/status", () => getPanelStatus())
-  .get("/panel-sse", async function* () {
+  .get("/panel/api/status", () => getPanelStatus())
+  .get("/panel/sse", async function* () {
     while (true) {
       yield sse({ event: "message", data: getPanelStatus() });
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   })
   .post(
-    "/panel-api/pairing-code",
+    "/panel/api/pairing-code",
     async ({ body }) => {
       const state = getState();
       if (state === "READY") throw status(409, "WhatsApp session is already connected");
@@ -67,18 +67,18 @@ export const PanelController = new Elysia()
       }),
     },
   )
-  .post("/panel-api/restart", () => {
+  .post("/panel/api/restart", () => {
     setTimeout(() => {
       process.exit();
     }, 1000);
     return { message: "Restart Success" };
   })
-  .post("/panel-api/logout", async () => {
+  .post("/panel/api/logout", async () => {
     await sock.logout();
     return { message: "Logout Success" };
   })
   .post(
-    "/panel-api/send-message",
+    "/panel/api/send-message",
     async ({ body }) => {
       const state = getState();
       if (state !== "READY") throw status(500, "Not ready");
@@ -95,10 +95,10 @@ export const PanelController = new Elysia()
       }),
     },
   )
-  .get("/panel-api/group-bot/commands", async () => ({ commands: await GroupBotService.listCommands() }))
-  .get("/panel-api/group-bot/settings", async () => ({ settings: await GroupBotService.getSettings() }))
+  .get("/panel/api/group-bot/commands", async () => ({ commands: await GroupBotService.listCommands() }))
+  .get("/panel/api/group-bot/settings", async () => ({ settings: await GroupBotService.getSettings() }))
   .put(
-    "/panel-api/group-bot/settings",
+    "/panel/api/group-bot/settings",
     async ({ body }) => {
       const settings = await GroupBotService.updateSettings(body);
       return { message: "Settings updated", settings };
@@ -110,7 +110,7 @@ export const PanelController = new Elysia()
     },
   )
   .post(
-    "/panel-api/group-bot/commands",
+    "/panel/api/group-bot/commands",
     async ({ body }) => {
       try {
         const command = await GroupBotService.createCommand(body);
@@ -136,7 +136,7 @@ export const PanelController = new Elysia()
     },
   )
   .put(
-    "/panel-api/group-bot/commands/:id",
+    "/panel/api/group-bot/commands/:id",
     async ({ params, body }) => {
       try {
         const command = await GroupBotService.updateCommand(params.id, body);
@@ -163,7 +163,7 @@ export const PanelController = new Elysia()
     },
   )
   .delete(
-    "/panel-api/group-bot/commands/:id",
+    "/panel/api/group-bot/commands/:id",
     async ({ params }) => {
       try {
         await GroupBotService.deleteCommand(params.id);
