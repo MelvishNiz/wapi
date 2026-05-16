@@ -1,52 +1,53 @@
-# wapi
+# WAPI
 
-WAPI is a REST API for sending and receiving WhatsApp messages built on [Bun](https://bun.sh) and the [Elysia](https://elysiajs.com) framework. It exposes a simple HTTP interface and includes a lightweight web panel for managing connections.
+WhatsApp API gateway dengan web panel dan bot command group dinamis.
 
-## Prerequisites
+## Development
 
-- Bun v1.2.15 or later
+```bash
+bun install
+cp .env.example .env
+bun run dev
+```
 
-## Getting started
+URL:
 
-1. Install dependencies
+```txt
+API          http://localhost:3000
+Panel        http://localhost:3000/panel
+Bot Command  http://localhost:3000/bot-commands
+API Docs     http://localhost:3000/openapi
+```
 
-   ```bash
-   bun install
-   ```
+## Production
 
-2. Copy `.env.example` to `.env` and adjust the values
+Build server dan panel:
 
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+bun install --production
+bun run build:all
+```
 
-   | Variable | Description |
-   | -------- | ----------- |
-   | `ACCESS_TOKEN` | Token used by the API for authentication |
-   | `BASIC_AUTH_USER` | Username for the control panel |
-   | `BASIC_AUTH_PASS` | Password for the control panel |
+Run:
 
-3. Start the development server
+```bash
+bun run start
+```
 
-   ```bash
-   bun run dev
-   # or
-   bun run index.ts
-   ```
+## Environment
 
-   The API is available at `http://localhost:3000`.
+```env
+ACCESS_TOKEN=change-me
+BASIC_AUTH_USER=admin
+BASIC_AUTH_PASS=change-me
+VITE_API_URL=http://localhost:3000
+VITE_ACCESS_TOKEN=change-me
+```
 
-## Available scripts
+## API Documentation
 
-| Command | Description |
-| ------- | ----------- |
-| `bun run dev` | Start API in development mode |
-| `bun run dev:watch` | Start API with file watching |
-| `bun run build` | Build a standalone server binary |
-| `bun run build:panel` | Build the Vue panel |
-| `bun run build:all` | Build server and panel |
-| `bun run start` | Run the compiled server |
+Dokumentasi API lengkap tersedia di:
 
-## Notes
-
-This project was created using `bun init` in bun v1.2.15.
+```txt
+/openapi
+```

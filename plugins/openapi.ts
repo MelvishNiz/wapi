@@ -11,7 +11,7 @@ export const OpenApiPlugin = () =>
     .use(
       openapi({
         exclude: {
-          paths: ["/", "/*", "/panel", "/panel/*", "/assets/*"],
+          paths: ["/", "/*", "/panel", "/panel/*", "/bot-commands", "/assets/*"],
         },
         documentation: {
           info: {
