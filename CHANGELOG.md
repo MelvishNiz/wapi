@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/MelvishNiz/wapi/compare/v1.1.0...v1.2.0) (2026-05-16)
+
+
+### Features
+
+* update API endpoints to use consistent path structure and remove unused StreamController ([de63f44](https://github.com/MelvishNiz/wapi/commit/de63f448fef5eadd1caf9794fe317c4a0a80c392))
+
 # [1.1.0](https://github.com/MelvishNiz/wapi/compare/v1.0.0...v1.1.0) (2026-05-16)
 
 
