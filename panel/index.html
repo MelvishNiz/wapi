@@ -7,10 +7,13 @@
   <link rel="icon" type="image/x-icon" href="/src/assets/favicon.ico">
   <link rel="stylesheet" href="/src/assets/css/main.css">
 </head>
-<body class="h-svh text-white overflow-hidden">
+<body class="h-svh text-white overflow-hidden relative">
   <!-- Toast Container -->
   <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
-  <div id="app"></div>
+  <div class="absolute inset-0">
+    <div id="app" class="size-full overflow-auto">
+    </div>
+  </div>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

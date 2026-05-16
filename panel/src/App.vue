@@ -1,5 +1,7 @@
 <template>
-  <div class="h-screen container mx-auto px-4 py-6 flex flex-col">
+  <BotCommandsPage v-if="isBotCommandsPage" :add-log="addLog" :show-toast="showToast" />
+
+  <div v-else class="h-screen container mx-auto px-4 py-6 flex flex-col">
     <!-- Header Bar -->
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center space-x-3">
@@ -7,12 +9,15 @@
           <i class="icon-[fa6-brands--whatsapp] text-white text-xl"></i>
         </div>
         <div>
-          <h1 class="text-2xl font-bold text-white">Gateway Paneldawd</h1>
+          <h1 class="text-2xl font-bold text-white">Gateway Panel</h1>
           <p class="text-sm text-gray-300">WhatsApp API Management</p>
         </div>
       </div>
 
       <div class="flex items-center space-x-4">
+        <a href="/bot-commands" class="btn-secondary px-4 py-2 rounded-xl text-sm font-medium">
+          <i class="icon-[material-symbols--smart-toy-rounded] mr-2"></i>Bot
+        </a>
         <div class="flex items-center space-x-2 px-3 py-2 rounded-full glass-card">
           <div id="status-dot" class="w-3 h-3 rounded-full" :class="connected ? 'bg-green-400 glow' : 'bg-red-400 status-pulse'"></div>
           <span id="status-label" class="text-sm font-medium">{{ connected ? "Connected" : "Reconnecting..." }}</span>
@@ -188,6 +193,7 @@
             </div>
           </div>
         </div>
+
       </div>
 
       <!-- Right Side - Terminal -->
@@ -239,10 +245,12 @@
 import axios from "axios";
 import { EventSourcePolyfill, NativeEventSource } from "event-source-polyfill";
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import BotCommandsPage from "./components/bot/BotCommandsPage.vue";
 import QRCode from "./components/QRCode.vue";
 import { ACCESS_TOKEN, API_URL } from "./utils/helper";
 
 const EventSource = NativeEventSource || EventSourcePolyfill;
+const isBotCommandsPage = computed(() => window.location.pathname === "/bot-commands");
 const connected = ref(false);
 const isLoadingAction = ref(false);
 const isLoadingPairing = ref(false);
@@ -250,18 +258,10 @@ const pairingPhoneNumber = ref("");
 const activeConnectionTab = ref<"qr" | "pairing">("qr");
 const data = reactive({
   qrcode: "",
-  user: {
-    id: "",
-    name: "",
-    lid: "",
-  },
+  user: { id: "", name: "", lid: "" },
   connection: null,
   state: "NOT_READY",
-  pairing: {
-    code: "",
-    phone_number: "",
-    requested_at: null as number | null,
-  },
+  pairing: { code: "", phone_number: "", requested_at: null as number | null },
 });
 const logs = ref<{ timestamp: string; class: string; message: string }[]>([]);
 const isSessionReady = computed(() => {
@@ -269,7 +269,6 @@ const isSessionReady = computed(() => {
   return data.state === "READY" || connection === "open" || connection === "connected";
 });
 
-// Methods
 const addLog = (message: string, type: "error" | "info" | "success" | "default" = "default") => {
   const typeColors = {
     error: "text-red-400 border-red-400",
@@ -277,17 +276,11 @@ const addLog = (message: string, type: "error" | "info" | "success" | "default" 
     success: "text-green-400 border-green-400",
     default: "text-gray-300 border-gray-500",
   };
-  logs.value.push({
-    timestamp: new Date().toLocaleTimeString(),
-    class: typeColors[type] || typeColors.default,
-    message,
-  });
+  logs.value.push({ timestamp: new Date().toLocaleTimeString(), class: typeColors[type] || typeColors.default, message });
   nextTick(() => {
     setTimeout(() => {
       const responseLogEl = document.getElementById("response-log");
-      if (responseLogEl) {
-        responseLogEl.scrollTop = responseLogEl.scrollHeight;
-      }
+      if (responseLogEl) responseLogEl.scrollTop = responseLogEl.scrollHeight;
     }, 100);
   });
 };
@@ -304,20 +297,14 @@ const showToast = (message: string, type: "success" | "error" | "info" | "warnin
     info: "icon-[material-symbols--info-rounded] text-blue-400",
     warning: "icon-[material-symbols--warning-rounded] text-yellow-400",
   };
-
   const toast = document.createElement("div");
   toast.className = "notification glass-card px-4 py-3 rounded-lg flex items-center space-x-3 min-w-80";
-  toast.innerHTML = `
-    <i class="${icons[type]}"></i>
-    <span class="text-white text-sm font-medium">${message}</span>
-  `;
-
+  toast.innerHTML = `<i class="${icons[type]}"></i><span class="text-white text-sm font-medium">${message}</span>`;
   toastContainer?.appendChild(toast);
   setTimeout(() => toast.remove(), 4000);
 };
 const copyToken = () => {
-  const tokenText = ACCESS_TOKEN;
-  navigator.clipboard.writeText(tokenText);
+  navigator.clipboard.writeText(ACCESS_TOKEN);
   showToast("Token copied to clipboard!", "success");
 };
 const copyPairingCode = () => {
@@ -325,6 +312,7 @@ const copyPairingCode = () => {
   showToast("Pairing code copied to clipboard!", "success");
 };
 const formatPairingCode = (code: string) => code.replace(/(.{4})/g, "$1 ").trim();
+
 const es = new EventSource(`${API_URL}/sse?token=${ACCESS_TOKEN}`);
 const startStream = () => {
   addLog(`Connecting to ${API_URL}/sse`, "info");
@@ -332,40 +320,24 @@ const startStream = () => {
     addLog("Stream connection established", "success");
     connected.value = true;
   };
-
   es.onerror = () => {
     addLog("Connection lost. Attempting to reconnect...", "error");
     connected.value = false;
   };
-
   es.onmessage = (event) => {
-    console.info(event.data);
     const { state, user, connection, qr_code, pairing } = JSON.parse(event.data);
     data.state = state;
     data.user = user;
     data.connection = connection;
     data.qrcode = qr_code;
-    data.pairing = pairing || {
-      code: "",
-      phone_number: "",
-      requested_at: null,
-    };
+    data.pairing = pairing || { code: "", phone_number: "", requested_at: null };
   };
 };
 const requestPairingCode = async () => {
   addLog(`Requesting pairing code for ${pairingPhoneNumber.value}...`, "info");
   isLoadingPairing.value = true;
-
   try {
-    const response = await axios.post(
-      `${API_URL}/api/pairing-code`,
-      {
-        phone_number: pairingPhoneNumber.value,
-      },
-      {
-        headers: { ACCESS_TOKEN: ACCESS_TOKEN },
-      },
-    );
+    const response = await axios.post(`${API_URL}/api/pairing-code`, { phone_number: pairingPhoneNumber.value }, { headers: { ACCESS_TOKEN: ACCESS_TOKEN } });
     data.pairing.code = response.data.pairing_code;
     data.pairing.phone_number = response.data.phone_number;
     data.pairing.requested_at = Date.now();
@@ -383,13 +355,7 @@ const restartSession = async () => {
   addLog("Initiating session restart...", "info");
   isLoadingAction.value = true;
   try {
-    const response = await axios.post(
-      `${API_URL}/api/restart`,
-      {},
-      {
-        headers: { ACCESS_TOKEN: ACCESS_TOKEN },
-      },
-    );
+    const response = await axios.post(`${API_URL}/api/restart`, {}, { headers: { ACCESS_TOKEN: ACCESS_TOKEN } });
     addLog(response.data.message, "success");
   } catch (error: any) {
     const message = error.response?.data?.message || "Restart failed";
@@ -401,15 +367,8 @@ const restartSession = async () => {
 const logout = async () => {
   addLog("Logging out...", "info");
   isLoadingAction.value = true;
-
   try {
-    const response = await axios.post(
-      `${API_URL}/api/logout`,
-      {},
-      {
-        headers: { ACCESS_TOKEN: ACCESS_TOKEN },
-      },
-    );
+    const response = await axios.post(`${API_URL}/api/logout`, {}, { headers: { ACCESS_TOKEN: ACCESS_TOKEN } });
     addLog(response.data.message, "success");
   } catch (error: any) {
     const message = error.response?.data?.message || "Logout failed";
@@ -420,26 +379,14 @@ const logout = async () => {
 };
 const testSendMessage = async () => {
   const currentPhoneNumber = data.user?.id?.split(":")[0];
-
   if (!currentPhoneNumber || currentPhoneNumber === "-") {
     addLog("No active session found. Please scan QR code first", "error");
     return;
   }
-
   addLog(`Sending test message to ${currentPhoneNumber}...`, "info");
   isLoadingAction.value = true;
-
   try {
-    const response = await axios.post(
-      `${API_URL}/api/send-message`,
-      {
-        to: currentPhoneNumber,
-        message: "Test Message from WhatsApp Gateway",
-      },
-      {
-        headers: { ACCESS_TOKEN: ACCESS_TOKEN },
-      },
-    );
+    const response = await axios.post(`${API_URL}/api/send-message`, { to: currentPhoneNumber, message: "Test Message from WhatsApp Gateway" }, { headers: { ACCESS_TOKEN: ACCESS_TOKEN } });
     addLog(response.data.message, "success");
   } catch (error: any) {
     const message = error.response?.data?.message || "Failed to send message";
@@ -450,9 +397,7 @@ const testSendMessage = async () => {
 };
 
 onMounted(() => {
-  nextTick(() => {
-    startStream();
-  });
+  nextTick(() => startStream());
 });
 onBeforeUnmount(() => {
   es.close();

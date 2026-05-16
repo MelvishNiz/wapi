@@ -1,17 +1,8 @@
 import { rm } from "node:fs/promises";
 import NodeCache from "@cacheable/node-cache";
 import type { Boom } from "@hapi/boom";
-import makeWASocket, {
-  type CacheStore,
-  DisconnectReason,
-  fetchLatestBaileysVersion,
-  jidNormalizedUser,
-  makeCacheableSignalKeyStore,
-  normalizeMessageContent,
-  useMultiFileAuthState,
-  type WAConnectionState,
-  type WAMessage,
-} from "baileys";
+import makeWASocket, { type CacheStore, DisconnectReason, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, useMultiFileAuthState, type WAConnectionState, type WAMessage } from "baileys";
+import { GroupBotService } from "../services/group-bot.service";
 import { logger } from "./logger";
 
 const savePath = "./credentials/auth_save";
@@ -19,39 +10,6 @@ const msgRetryCounterCache = new NodeCache() as CacheStore;
 const processedCommandCache = new NodeCache({ stdTTL: 300 }) as CacheStore;
 const { state, saveCreds } = await useMultiFileAuthState(savePath);
 const startedAt = Math.floor(Date.now() / 1000);
-const adminWhitelist = new Set(
-  (process.env.ADMIN_WHITELIST || process.env.WHITELIST_ADMINS || process.env.WHATSAPP_ADMIN_WHITELIST || "")
-    .split(",")
-    .map((admin) => normalizeAdminJid(admin))
-    .filter((admin) => admin.length > 0),
-);
-
-function normalizeAdminJid(value: string) {
-  const normalized = value.trim();
-  if (!normalized) return "";
-  if (normalized.includes("@")) return jidNormalizedUser(normalized);
-
-  const phone = normalized.replace(/\D/g, "");
-  return phone ? `${phone}@s.whatsapp.net` : "";
-}
-
-function getMessageText(message: WAMessage) {
-  const content = normalizeMessageContent(message.message);
-
-  return (content?.conversation || content?.extendedTextMessage?.text || content?.imageMessage?.caption || content?.videoMessage?.caption || content?.documentMessage?.caption || "").trim();
-}
-
-function getSenderJids(message: WAMessage) {
-  const senderJids = [message.key.participant, message.key.participantAlt, message.key.participantUsername].filter(Boolean) as string[];
-
-  return senderJids.map((jid) => jidNormalizedUser(jid));
-}
-
-function isWhitelistedAdmin(message: WAMessage) {
-  if (message.key.fromMe) return true;
-  if (adminWhitelist.size === 0) return false;
-  return getSenderJids(message).some((jid) => adminWhitelist.has(jid));
-}
 
 function getMessageTimestamp(message: WAMessage) {
   const timestamp = message.messageTimestamp;
@@ -72,15 +30,6 @@ function hasProcessedCommand(message: WAMessage) {
 
   processedCommandCache.set(cacheKey, true);
   return false;
-}
-
-function formatDate(timestamp?: number) {
-  if (!timestamp) return "-";
-  return new Intl.DateTimeFormat("id-ID", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: process.env.TZ || "Asia/Jakarta",
-  }).format(new Date(timestamp * 1000));
 }
 
 const start = async () => {
@@ -142,31 +91,18 @@ const start = async () => {
       if (!groupJid?.endsWith("@g.us")) continue;
       if (type !== "notify" && !message.key.fromMe) continue;
       if (!isNewMessage(message)) continue;
-      if (getMessageText(message).toLowerCase() !== "/info") continue;
+      if (!GroupBotService.getMessageText(message).startsWith("/")) continue;
       if (hasProcessedCommand(message)) continue;
-      if (!isWhitelistedAdmin(message)) continue;
+      if (!(await GroupBotService.isSenderAllowed(message))) continue;
 
       try {
         const metadata = await sock.groupMetadata(groupJid);
-        const participantCount = metadata.participants?.length || metadata.size || 0;
-        const adminCount = metadata.participants?.filter((participant) => participant.admin || participant.isAdmin || participant.isSuperAdmin).length || 0;
-        const description = metadata.desc?.trim() || "-";
-        const text = [
-          "Info Group",
-          `Nama: ${metadata.subject || "-"}`,
-          `Group ID: ${metadata.id || groupJid}`,
-          `Owner: ${metadata.owner || metadata.ownerPn || "-"}`,
-          `Dibuat: ${formatDate(metadata.creation)}`,
-          `Peserta: ${participantCount}`,
-          `Admin: ${adminCount}`,
-          `Mode kirim pesan: ${metadata.announce ? "Hanya admin" : "Semua peserta"}`,
-          `Mode edit info: ${metadata.restrict ? "Hanya admin" : "Semua peserta"}`,
-          `Deskripsi: ${description}`,
-        ].join("\n");
+        const reply = await GroupBotService.buildReply(message, groupJid, metadata);
+        if (!reply?.text) continue;
 
-        await sock.sendMessage(groupJid, { text }, { quoted: message });
+        await sock.sendMessage(groupJid, { text: reply.text }, { quoted: message });
       } catch (err: any) {
-        logger.error({ err, groupJid }, "Failed to reply group info");
+        logger.error({ err, groupJid }, "Failed to process group bot command");
       }
     }
   });

@@ -8,5 +8,6 @@ export const PanelController = new Elysia()
   .use(BasicAuthPlugin())
   // Panel
   .get("/panel", file("./dist/index.html"))
+  .get("/bot-commands", file("./dist/index.html"))
   // Static Files
   .use(staticPlugin({ prefix: "/assets", assets: "./dist/assets" }));

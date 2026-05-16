@@ -29,6 +29,23 @@ button:not(:disabled),
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+#toast-container {
+  z-index: 2147483647;
+}
+
+.modal-backdrop {
+  z-index: 1000;
+  background: rgba(4, 4, 18, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.modal-panel {
+  background: rgb(38, 36, 62);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
 .status-pulse {
   animation: statusPulse 2s infinite;
 }
@@ -79,6 +96,95 @@ button:not(:disabled),
   background: rgba(255, 255, 255, 0.2);
 }
 
+.form-input {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.75rem 1rem;
+  color: white;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.form-input::placeholder {
+  color: rgb(107, 114, 128);
+}
+
+.form-input:focus {
+  border-color: rgb(52, 211, 153);
+}
+
+.json-editor {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  max-height: 22rem;
+  overflow: hidden;
+}
+
+.json-lines {
+  min-width: 2.75rem;
+  user-select: none;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.75rem 0.75rem;
+  color: rgb(107, 114, 128);
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5rem;
+  text-align: right;
+}
+
+.json-code {
+  min-height: 11rem;
+  resize: vertical;
+  overflow: auto;
+  border: 0;
+  background: transparent;
+  padding: 0.75rem 1rem;
+  color: rgb(226, 232, 240);
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5rem;
+  outline: none;
+  tab-size: 2;
+  white-space: pre;
+}
+
+.json-code::placeholder {
+  color: rgb(100, 116, 139);
+}
+
+.variable-menu {
+  position: absolute;
+  left: 0.75rem;
+  bottom: calc(100% + 0.25rem);
+  z-index: 20;
+  max-height: 12rem;
+  min-width: 13rem;
+  overflow: auto;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgb(24, 24, 39);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+  padding: 0.35rem;
+}
+
+.variable-menu-item {
+  display: block;
+  width: 100%;
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  color: rgb(110, 231, 183);
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.variable-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .metric-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -104,6 +210,11 @@ button:not(:disabled),
 
 .notification {
   animation: slideInRight 0.3s ease-out;
+  position: relative;
+  z-index: 2147483647;
+  background: rgb(30, 32, 48);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
 }
 
 @keyframes slideInRight {
