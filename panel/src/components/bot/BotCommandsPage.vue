@@ -90,7 +90,7 @@
 <script setup lang="ts">
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";
-import { ACCESS_TOKEN, API_URL } from "../../utils/helper";
+import { PANEL_API_URL } from "../../utils/helper";
 import CommandModal from "./CommandModal.vue";
 import type { GroupBotCommand, GroupBotCommandPayload } from "./types";
 
@@ -118,9 +118,7 @@ const parseAdminWhitelistInput = () => {
 const loadCommands = async () => {
   isLoadingCommands.value = true;
   try {
-    const response = await axios.get(`${API_URL}/api/group-bot/commands`, {
-      headers: { ACCESS_TOKEN: ACCESS_TOKEN },
-    });
+    const response = await axios.get(`${PANEL_API_URL}/panel-api/group-bot/commands`);
     commands.value = response.data.commands || [];
   } catch (error: any) {
     const message = getErrorMessage(error, "Failed to load group bot commands");
@@ -132,9 +130,7 @@ const loadCommands = async () => {
 };
 const loadBotSettings = async () => {
   try {
-    const response = await axios.get(`${API_URL}/api/group-bot/settings`, {
-      headers: { ACCESS_TOKEN: ACCESS_TOKEN },
-    });
+    const response = await axios.get(`${PANEL_API_URL}/panel-api/group-bot/settings`);
     adminWhitelistInput.value = (response.data.settings?.adminWhitelist || []).join("\n");
   } catch (error: any) {
     const message = getErrorMessage(error, "Failed to load group bot settings");
@@ -149,11 +145,8 @@ const saveBotSettings = async () => {
   isSavingSettings.value = true;
   try {
     const response = await axios.put(
-      `${API_URL}/api/group-bot/settings`,
+      `${PANEL_API_URL}/panel-api/group-bot/settings`,
       { adminWhitelist: parseAdminWhitelistInput() },
-      {
-        headers: { ACCESS_TOKEN: ACCESS_TOKEN },
-      },
     );
 
     adminWhitelistInput.value = (response.data.settings?.adminWhitelist || []).join("\n");
@@ -181,8 +174,8 @@ const closeCommandModal = () => {
 const saveCommand = async (payload: GroupBotCommandPayload) => {
   isSavingCommand.value = true;
   try {
-    const url = editingCommandId.value ? `${API_URL}/api/group-bot/commands/${editingCommandId.value}` : `${API_URL}/api/group-bot/commands`;
-    const response = editingCommandId.value ? await axios.put(url, payload, { headers: { ACCESS_TOKEN: ACCESS_TOKEN } }) : await axios.post(url, payload, { headers: { ACCESS_TOKEN: ACCESS_TOKEN } });
+    const url = editingCommandId.value ? `${PANEL_API_URL}/panel-api/group-bot/commands/${editingCommandId.value}` : `${PANEL_API_URL}/panel-api/group-bot/commands`;
+    const response = editingCommandId.value ? await axios.put(url, payload) : await axios.post(url, payload);
 
     props.addLog(response.data.message, "success");
     props.showToast(response.data.message, "success");
@@ -203,9 +196,7 @@ const deleteCommand = async (id: string) => {
 
   isLoadingCommands.value = true;
   try {
-    const response = await axios.delete(`${API_URL}/api/group-bot/commands/${id}`, {
-      headers: { ACCESS_TOKEN: ACCESS_TOKEN },
-    });
+    const response = await axios.delete(`${PANEL_API_URL}/panel-api/group-bot/commands/${id}`);
     props.addLog(response.data.message, "success");
     props.showToast(response.data.message, "success");
     if (editingCommandId.value === id) closeCommandModal();

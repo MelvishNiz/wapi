@@ -2,10 +2,13 @@ services:
   wapi:
     container_name: wapi
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
+      ADMIN_WHITELIST: ${ADMIN_WHITELIST:-}
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER:-admin}
+      BASIC_AUTH_PASS: ${BASIC_AUTH_PASS:-admin}
       TZ: ${TZ:-Asia/Jakarta}
+      PANEL_API_URL: ${PANEL_API_URL:-}
     ports:
       - "${PORT:-3000}:3000"
     volumes:

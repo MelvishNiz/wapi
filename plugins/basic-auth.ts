@@ -2,6 +2,15 @@ import { Elysia } from "elysia";
 
 export const BasicAuthPlugin = () =>
   new Elysia({ name: "basic-auth" }).derive({ as: "scoped" }, ({ request }) => {
+    const origin = request.headers.get("origin");
+    if (origin) {
+      const requestHost = new URL(request.url).host;
+      const originHost = new URL(origin).host;
+      if (originHost !== requestHost) {
+        throw new Response("Forbidden", { status: 403 });
+      }
+    }
+
     const header = request.headers.get("authorization");
 
     if (!header || !header.startsWith("Basic ")) {

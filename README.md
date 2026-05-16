@@ -77,8 +77,10 @@ ACCESS_TOKEN=change-me
 BASIC_AUTH_USER=admin
 BASIC_AUTH_PASS=change-me
 VITE_API_URL=http://localhost:3000
-VITE_ACCESS_TOKEN=change-me # samakan dengan ACCESS_TOKEN jika panel perlu akses API
+PANEL_API_URL=http://localhost:3000 # opsional untuk Docker image production
 ```
+
+Panel dilindungi `BASIC_AUTH_USER` / `BASIC_AUTH_PASS`. `ACCESS_TOKEN` hanya dipakai backend untuk public API dan tidak dikirim ke browser.
 
 ## Release & Docker Image
 

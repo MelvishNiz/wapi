@@ -80,21 +80,16 @@
           </div>
         </div>
 
-        <!-- Access Token -->
+        <!-- API Docs -->
         <div class="glass-card rounded-xl p-4">
           <div class="flex items-center justify-between gap-3 mb-3">
-            <span class="text-sm font-medium text-gray-300">Access Token</span>
+            <span class="text-sm font-medium text-gray-300">API Documentation</span>
             <a :href="`${API_URL}/openapi`" target="_blank" class="text-xs text-blue-400 hover:text-blue-300 whitespace-nowrap">
               API Docs <i class="icon-[material-symbols--open-in-new] ml-1"></i>
             </a>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3">
-            <div class="min-w-0 overflow-x-auto bg-black/30 rounded-lg p-3 font-mono text-xs text-green-300 whitespace-nowrap">
-              <span id="access-token">{{ ACCESS_TOKEN }}</span>
-            </div>
-            <button class="btn-secondary px-4 py-3 rounded-xl text-sm font-medium whitespace-nowrap" @click="copyToken">
-              <i class="icon-[material-symbols--content-copy] mr-2"></i>Copy
-            </button>
+          <div class="rounded-lg bg-black/30 p-3 text-sm text-gray-300">
+            Public API tetap menggunakan server access token. Panel memakai Basic Auth tanpa membuka token ke browser.
           </div>
         </div>
 
@@ -247,7 +242,7 @@ import { EventSourcePolyfill, NativeEventSource } from "event-source-polyfill";
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import BotCommandsPage from "./components/bot/BotCommandsPage.vue";
 import QRCode from "./components/QRCode.vue";
-import { ACCESS_TOKEN, API_URL } from "./utils/helper";
+import { API_URL, PANEL_API_URL } from "./utils/helper";
 
 const EventSource = NativeEventSource || EventSourcePolyfill;
 const isBotCommandsPage = computed(() => window.location.pathname === "/bot-commands");
@@ -303,19 +298,15 @@ const showToast = (message: string, type: "success" | "error" | "info" | "warnin
   toastContainer?.appendChild(toast);
   setTimeout(() => toast.remove(), 4000);
 };
-const copyToken = () => {
-  navigator.clipboard.writeText(ACCESS_TOKEN);
-  showToast("Token copied to clipboard!", "success");
-};
 const copyPairingCode = () => {
   navigator.clipboard.writeText(data.pairing.code);
   showToast("Pairing code copied to clipboard!", "success");
 };
 const formatPairingCode = (code: string) => code.replace(/(.{4})/g, "$1 ").trim();
 
-const es = new EventSource(`${API_URL}/sse?token=${ACCESS_TOKEN}`);
+const es = new EventSource(`${PANEL_API_URL}/panel-sse`);
 const startStream = () => {
-  addLog(`Connecting to ${API_URL}/sse`, "info");
+  addLog("Connecting to panel stream", "info");
   es.onopen = () => {
     addLog("Stream connection established", "success");
     connected.value = true;
@@ -337,7 +328,7 @@ const requestPairingCode = async () => {
   addLog(`Requesting pairing code for ${pairingPhoneNumber.value}...`, "info");
   isLoadingPairing.value = true;
   try {
-    const response = await axios.post(`${API_URL}/api/pairing-code`, { phone_number: pairingPhoneNumber.value }, { headers: { ACCESS_TOKEN: ACCESS_TOKEN } });
+    const response = await axios.post(`${PANEL_API_URL}/panel-api/pairing-code`, { phone_number: pairingPhoneNumber.value });
     data.pairing.code = response.data.pairing_code;
     data.pairing.phone_number = response.data.phone_number;
     data.pairing.requested_at = Date.now();
@@ -355,7 +346,7 @@ const restartSession = async () => {
   addLog("Initiating session restart...", "info");
   isLoadingAction.value = true;
   try {
-    const response = await axios.post(`${API_URL}/api/restart`, {}, { headers: { ACCESS_TOKEN: ACCESS_TOKEN } });
+    const response = await axios.post(`${PANEL_API_URL}/panel-api/restart`, {});
     addLog(response.data.message, "success");
   } catch (error: any) {
     const message = error.response?.data?.message || "Restart failed";
@@ -368,7 +359,7 @@ const logout = async () => {
   addLog("Logging out...", "info");
   isLoadingAction.value = true;
   try {
-    const response = await axios.post(`${API_URL}/api/logout`, {}, { headers: { ACCESS_TOKEN: ACCESS_TOKEN } });
+    const response = await axios.post(`${PANEL_API_URL}/panel-api/logout`, {});
     addLog(response.data.message, "success");
   } catch (error: any) {
     const message = error.response?.data?.message || "Logout failed";
@@ -386,7 +377,7 @@ const testSendMessage = async () => {
   addLog(`Sending test message to ${currentPhoneNumber}...`, "info");
   isLoadingAction.value = true;
   try {
-    const response = await axios.post(`${API_URL}/api/send-message`, { to: currentPhoneNumber, message: "Test Message from WhatsApp Gateway" }, { headers: { ACCESS_TOKEN: ACCESS_TOKEN } });
+    const response = await axios.post(`${PANEL_API_URL}/panel-api/send-message`, { to: currentPhoneNumber, message: "Test Message from WhatsApp Gateway" });
     addLog(response.data.message, "success");
   } catch (error: any) {
     const message = error.response?.data?.message || "Failed to send message";

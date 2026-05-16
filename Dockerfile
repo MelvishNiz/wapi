@@ -16,8 +16,7 @@ COPY utils ./utils
 COPY panel ./panel
 
 ARG VITE_API_URL=http://localhost:3000
-ARG VITE_PANEL_ACCESS=
-RUN VITE_API_URL="$VITE_API_URL" VITE_ACCESS_TOKEN="$VITE_PANEL_ACCESS" bun run build:all
+RUN VITE_API_URL="$VITE_API_URL" bun run build:all
 
 FROM debian:bookworm-slim AS runtime
 
@@ -33,7 +32,11 @@ RUN apt-get update \
 
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/dist ./dist
+COPY scripts/docker-entrypoint.sh ./docker-entrypoint.sh
+
+RUN chmod +x ./docker-entrypoint.sh
 
 EXPOSE 3000
 
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["./server"]

@@ -60,4 +60,3 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL || 'http://localhost:3000' }}
-            VITE_PANEL_ACCESS=${{ secrets.VITE_ACCESS_TOKEN || '' }}
