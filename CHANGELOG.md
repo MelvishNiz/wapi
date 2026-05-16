@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/MelvishNiz/wapi/compare/v1.0.0...v1.1.0) (2026-05-16)
+
+
+### Features
+
+* refactor panel API integration and enhance Docker support with runtime configuration ([2caa859](https://github.com/MelvishNiz/wapi/commit/2caa8598ec670f9b3e73b11788eb139490621788))
+
 # 1.0.0 (2026-05-16)
 
 
